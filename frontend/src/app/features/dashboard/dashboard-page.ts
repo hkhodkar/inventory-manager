@@ -13,6 +13,7 @@ import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { TimeAgoPipe } from '../../shared/pipes/time-ago.pipe';
 import { Icon, IconName } from '../../shared/ui/icon';
 import { MovementTypeBadge } from '../../shared/ui/movement-type';
+import { valueOf } from '../../shared/ui/list-query';
 import { StockBadge } from '../../shared/ui/stock-badge';
 
 interface Kpi {
@@ -49,6 +50,9 @@ export class DashboardPage {
   protected readonly stats = rxResource({ stream: () => this.api.dashboard() });
   protected readonly timeline = rxResource({ stream: () => this.api.movementsOverTime(30) });
   protected readonly categories = rxResource({ stream: () => this.api.stockByCategory() });
+  protected readonly statsData = valueOf(this.stats);
+  private readonly timelineData = valueOf(this.timeline);
+  private readonly categoryData = valueOf(this.categories);
 
   protected readonly attention = computed(() =>
     this.alerts.alerts.hasValue() ? this.alerts.alerts.value().slice(0, 6) : [],
@@ -59,7 +63,7 @@ export class DashboardPage {
   }
 
   protected readonly kpis = computed<Kpi[]>(() => {
-    const s = this.stats.value();
+    const s = this.statsData();
     if (!s) return [];
     return [
       {
@@ -106,7 +110,7 @@ export class DashboardPage {
   });
 
   protected readonly flowChart = computed<ChartConfiguration | null>(() => {
-    const days = this.timeline.value();
+    const days = this.timelineData();
     if (!days?.length) return null;
     const c = this.chartTheme.colors();
     return {
@@ -163,7 +167,7 @@ export class DashboardPage {
   });
 
   protected readonly categoryChart = computed<ChartConfiguration | null>(() => {
-    const rows = this.categories.value();
+    const rows = this.categoryData();
     if (!rows?.length) return null;
     const c = this.chartTheme.colors();
     return {

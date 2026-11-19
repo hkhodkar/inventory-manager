@@ -1,4 +1,4 @@
-import { DestroyRef, ResourceRef, inject, linkedSignal } from '@angular/core';
+import { DestroyRef, ResourceRef, Signal, computed, inject, linkedSignal } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
@@ -50,4 +50,12 @@ export function latestValue<T>(resource: ResourceRef<T | undefined>) {
     source: () => (resource.hasValue() ? resource.value() : undefined),
     computation: (value, previous) => value ?? previous?.value,
   });
+}
+
+/**
+ * The resource's value, or undefined while it loads or after it failed.
+ * Reading `value()` directly throws when the request failed.
+ */
+export function valueOf<T>(resource: ResourceRef<T | undefined>): Signal<T | undefined> {
+  return computed(() => (resource.hasValue() ? resource.value() : undefined));
 }

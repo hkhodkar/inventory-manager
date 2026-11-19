@@ -13,6 +13,7 @@ import { groupByWeek } from '../../core/utils/group-by-week';
 import { ChartDirective } from '../../shared/directives/chart.directive';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { Icon } from '../../shared/ui/icon';
+import { valueOf } from '../../shared/ui/list-query';
 import { ToastService } from '../../shared/ui/toast.service';
 
 const PERIODS = [7, 30, 90];
@@ -45,14 +46,18 @@ export class ReportsPage {
     stream: ({ params }) => this.api.topMovers(params, 8),
   });
 
+  protected readonly categoryRows = valueOf(this.categories);
+  protected readonly moverRows = valueOf(this.movers);
+  private readonly timelineDays = valueOf(this.timeline);
+
   protected readonly totalValue = computed(() =>
-    (this.categories.value() ?? []).reduce((sum, c) => sum + c.stock_value, 0),
+    (this.categoryRows() ?? []).reduce((sum, c) => sum + c.stock_value, 0),
   );
   protected readonly maxOut = computed(() =>
-    Math.max(1, ...(this.movers.value() ?? []).map((m) => m.units_out)),
+    Math.max(1, ...(this.moverRows() ?? []).map((m) => m.units_out)),
   );
   protected readonly periodTotals = computed(() => {
-    const days = this.timeline.value() ?? [];
+    const days = this.timelineDays() ?? [];
     return {
       in: days.reduce((sum, d) => sum + d.units_in, 0),
       out: days.reduce((sum, d) => sum + d.units_out, 0),
@@ -63,7 +68,7 @@ export class ReportsPage {
   });
 
   protected readonly categoryChart = computed<ChartConfiguration | null>(() => {
-    const rows = this.categories.value();
+    const rows = this.categoryRows();
     if (!rows?.length) return null;
     const c = this.chartTheme.colors();
     return {
@@ -101,7 +106,7 @@ export class ReportsPage {
   });
 
   protected readonly timelineChart = computed<ChartConfiguration | null>(() => {
-    const days = this.timeline.value();
+    const days = this.timelineDays();
     if (!days?.length) return null;
     const c = this.chartTheme.colors();
     const value = this.measure() === 'value';
@@ -234,7 +239,7 @@ export class ReportsPage {
   }
 
   protected exportCategories(): void {
-    const rows = this.categories.value() ?? [];
+    const rows = this.categoryRows() ?? [];
     const csv = toCsv(
       ['Category', 'Products', 'Units', 'Stock value (cost)', 'Stock value (retail)'],
       rows.map((r) => [r.category, r.product_count, r.units, r.stock_value, r.retail_value]),
@@ -243,7 +248,7 @@ export class ReportsPage {
   }
 
   protected exportMovers(): void {
-    const rows = this.movers.value() ?? [];
+    const rows = this.moverRows() ?? [];
     const csv = toCsv(
       ['SKU', 'Product', 'Category', 'Units out', 'Units in', 'Movements'],
       rows.map((m) => [

@@ -34,7 +34,7 @@
         <button
           type="button"
           class="btn btn-sm"
-          [disabled]="!categories.value()?.length"
+          [disabled]="!categoryRows()?.length"
           (click)="exportCategories()"
         >
           <app-icon name="download" [size]="14" />
@@ -57,7 +57,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (row of categories.value(); track row.category) {
+              @for (row of categoryRows(); track row.category) {
                 <tr>
                   <td>
                     <a routerLink="/products" [queryParams]="{ category: row.category }">{{
@@ -141,14 +141,14 @@
         <button
           type="button"
           class="btn btn-sm"
-          [disabled]="!movers.value()?.length"
+          [disabled]="!moverRows()?.length"
           (click)="exportMovers()"
         >
           <app-icon name="download" [size]="14" />
           CSV
         </button>
       </div>
-      @if (movers.value()?.length) {
+      @if (moverRows()?.length) {
         <div class="table-wrap">
           <table class="table">
             <thead>
@@ -162,7 +162,7 @@
               </tr>
             </thead>
             <tbody>
-              @for (m of movers.value(); track m.product.id; let i = $index) {
+              @for (m of moverRows(); track m.product.id; let i = $index) {
                 <tr>
                   <td class="rank">{{ i + 1 }}</td>
                   <td>

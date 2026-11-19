@@ -108,7 +108,7 @@ export class MovementForm implements OnInit {
     const { stock, unit } = this.product();
     if (this.type() === 'out' && -change > stock) {
       return stock > 0
-        ? `Only ${formatNumber(stock)} ${unit} on hand, you can't take out more than that`
+        ? `Only ${formatNumber(stock)} ${unit} on hand`
         : 'This product is out of stock, there is nothing to take out';
     }
     if (this.type() !== 'adjustment' && change === 0) {
@@ -126,7 +126,11 @@ export class MovementForm implements OnInit {
 
   protected showQuantityError(): boolean {
     const control = this.form.controls.quantity;
-    return (control.touched || this.submitted()) && (control.invalid || !!this.quantityProblem());
+    // stock problems show while typing, empty or malformed input only after leaving the field
+    if (this.quantityProblem() && (control.dirty || control.touched || this.submitted())) {
+      return true;
+    }
+    return control.invalid && (control.touched || this.submitted());
   }
 
   protected quantityError(): string {

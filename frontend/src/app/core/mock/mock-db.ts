@@ -126,6 +126,11 @@ export class MockDb {
     this.data = this.load() ?? createSeedData(this.clock());
   }
 
+  /** Picks up changes another browser tab saved to storage. */
+  reload(): void {
+    this.data = this.load() ?? createSeedData(this.clock());
+  }
+
   /** Throws away all changes and starts again from the demo data. */
   reset(): void {
     try {

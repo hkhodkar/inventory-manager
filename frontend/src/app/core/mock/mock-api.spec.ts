@@ -164,6 +164,13 @@ describe('mock API', () => {
         total: 1,
       });
 
+      // another tab's change shows up after a reload from storage
+      call('POST', '/api/products', { ...NEW_PRODUCT, sku: 'tst-2' });
+      reloaded.reload();
+      expect(handleMockRequest(reloaded, 'GET', '/api/products?search=TST-').body).toMatchObject({
+        total: 2,
+      });
+
       reloaded.reset();
       expect(storage.getItem(STORAGE_KEY)).toBeNull();
       expect(handleMockRequest(reloaded, 'GET', '/api/products').body).toMatchObject({ total: 40 });

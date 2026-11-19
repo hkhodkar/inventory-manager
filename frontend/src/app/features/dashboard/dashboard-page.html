@@ -55,7 +55,7 @@
     <div class="card chart-card">
       <div class="card-header">
         <h2>Value by category</h2>
-        @if (stats.value(); as s) {
+        @if (statsData(); as s) {
           <span class="text-muted">{{ s.stock_value | money: 'compact' }}</span>
         }
       </div>
@@ -98,7 +98,7 @@
         <h2>Recent movements</h2>
         <a routerLink="/movements" class="card-link">View log</a>
       </div>
-      @if (stats.value(); as s) {
+      @if (statsData(); as s) {
         @if (s.recent_movements.length) {
           <ul class="list-plain feed">
             @for (m of s.recent_movements; track m.id) {

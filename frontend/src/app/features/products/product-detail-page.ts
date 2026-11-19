@@ -10,7 +10,7 @@ import { ChangePipe } from '../../shared/pipes/change.pipe';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog';
 import { Icon } from '../../shared/ui/icon';
-import { latestValue } from '../../shared/ui/list-query';
+import { latestValue, valueOf } from '../../shared/ui/list-query';
 import { MovementTypeBadge } from '../../shared/ui/movement-type';
 import { Pagination } from '../../shared/ui/pagination';
 import { StockBadge } from '../../shared/ui/stock-badge';
@@ -59,17 +59,18 @@ export class ProductDetailPage {
     params: () => ({ id: this.productId(), page: this.historyPage() }),
     stream: ({ params }) => this.api.movements(params.id, params.page, HISTORY_PAGE_SIZE),
   });
+  protected readonly current = valueOf(this.product);
   protected readonly historyResult = latestValue(this.history);
 
   protected readonly margin = computed(() => {
-    const product = this.product.value();
+    const product = this.current();
     if (!product || product.sale_price <= 0) return null;
     return Math.round(((product.sale_price - product.cost_price) / product.sale_price) * 100);
   });
 
   /** Fill of the stock bar, the reorder level sits at one third. */
   protected readonly levelPercent = computed(() => {
-    const product = this.product.value();
+    const product = this.current();
     if (!product) return 0;
     if (!product.reorder_level) return product.stock > 0 ? 100 : 0;
     return Math.min(100, (product.stock / (product.reorder_level * 3)) * 100);

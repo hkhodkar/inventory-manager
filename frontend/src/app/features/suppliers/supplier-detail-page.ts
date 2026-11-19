@@ -9,7 +9,7 @@ import { StockAlerts } from '../../core/services/stock-alerts';
 import { MoneyPipe } from '../../shared/pipes/money.pipe';
 import { ConfirmDialog } from '../../shared/ui/confirm-dialog';
 import { Icon } from '../../shared/ui/icon';
-import { latestValue } from '../../shared/ui/list-query';
+import { latestValue, valueOf } from '../../shared/ui/list-query';
 import { Pagination } from '../../shared/ui/pagination';
 import { StockBadge } from '../../shared/ui/stock-badge';
 import { ToastService } from '../../shared/ui/toast.service';
@@ -61,6 +61,7 @@ export class SupplierDetailPage {
         page_size: PRODUCTS_PAGE_SIZE,
       }),
   });
+  protected readonly current = valueOf(this.supplier);
   protected readonly productsResult = latestValue(this.products);
 
   protected readonly editing = signal(false);

@@ -1,6 +1,6 @@
-import { Injectable, InjectionToken, inject, signal } from '@angular/core';
+import { DOCUMENT, DestroyRef, Injectable, InjectionToken, inject, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { MockDb } from './mock-db';
+import { MockDb, STORAGE_KEY } from './mock-db';
 
 /** Min and max delay of mock responses in ms, so loading states still show. */
 export const MOCK_LATENCY = new InjectionToken<readonly [number, number]>('MOCK_LATENCY', {
@@ -30,6 +30,18 @@ export class DemoMode {
   private database?: MockDb;
 
   readonly active = this.enabled.asReadonly();
+
+  constructor() {
+    // keep several open tabs on the same data, like they would be with a real server
+    const window = inject(DOCUMENT).defaultView;
+    const onStorage = (event: StorageEvent) => {
+      if (this.database && (event.key === STORAGE_KEY || event.key === null)) {
+        this.database.reload();
+      }
+    };
+    window?.addEventListener('storage', onStorage);
+    inject(DestroyRef).onDestroy(() => window?.removeEventListener('storage', onStorage));
+  }
 
   get db(): MockDb {
     return (this.database ??= new MockDb(this.storage));
