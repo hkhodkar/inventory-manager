@@ -1,0 +1,132 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="subtitle">Stock levels, value and what needs reordering today.</p>
+    </div>
+    <div class="page-actions">
+      <a class="btn" routerLink="/movements">
+        <app-icon name="movements" [size]="16" />
+        Movements
+      </a>
+      <a class="btn btn-primary" routerLink="/alerts">
+        <app-icon name="bell" [size]="16" />
+        Reorder list
+      </a>
+    </div>
+  </header>
+
+  @if (stats.error()) {
+    <div class="card empty-state">Could not load the dashboard. Please try again.</div>
+  }
+
+  <div class="kpi-grid">
+    @for (kpi of kpis(); track kpi.label) {
+      <a class="card kpi" [routerLink]="kpi.link" [class]="kpi.tone">
+        <span class="kpi-icon"><app-icon [name]="kpi.icon" [size]="18" /></span>
+        <span class="kpi-label">{{ kpi.label }}</span>
+        <strong class="kpi-value num">{{ kpi.value }}</strong>
+        <span class="kpi-hint">{{ kpi.hint }}</span>
+      </a>
+    } @empty {
+      @for (i of [1, 2, 3, 4, 5]; track i) {
+        <div class="card kpi skeleton"></div>
+      }
+    }
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="card chart-card">
+      <div class="card-header">
+        <h2>Stock flow at cost, last 30 days</h2>
+        <a routerLink="/reports" class="card-link">Reports</a>
+      </div>
+      <div class="chart-box">
+        @if (flowChart(); as config) {
+          <canvas
+            [appChart]="config"
+            aria-label="Value of stock received and shipped per day"
+            role="img"
+          ></canvas>
+        }
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="card-header">
+        <h2>Value by category</h2>
+        @if (stats.value(); as s) {
+          <span class="text-muted">{{ s.stock_value | money: 'compact' }}</span>
+        }
+      </div>
+      <div class="chart-box">
+        @if (categoryChart(); as config) {
+          <canvas [appChart]="config" aria-label="Stock value by category" role="img"></canvas>
+        }
+      </div>
+    </div>
+
+    <div class="card card-flush">
+      <div class="card-header">
+        <h2>Needs attention</h2>
+        <a routerLink="/alerts" class="card-link">All alerts</a>
+      </div>
+      @if (attention().length) {
+        <ul class="list-plain feed">
+          @for (item of attention(); track item.id) {
+            <li>
+              <div class="feed-main">
+                <a [routerLink]="['/products', item.id]"
+                  ><strong>{{ item.name }}</strong></a
+                >
+                <small
+                  >{{ item.sku }} · {{ item.stock }} of {{ item.reorder_level }}
+                  {{ item.unit }}</small
+                >
+              </div>
+              <app-stock-badge [status]="item.stock_status" />
+            </li>
+          }
+        </ul>
+      } @else if (alerts.alerts.hasValue()) {
+        <div class="empty-state">Every product is above its reorder level.</div>
+      }
+    </div>
+
+    <div class="card card-flush">
+      <div class="card-header">
+        <h2>Recent movements</h2>
+        <a routerLink="/movements" class="card-link">View log</a>
+      </div>
+      @if (stats.value(); as s) {
+        @if (s.recent_movements.length) {
+          <ul class="list-plain feed">
+            @for (m of s.recent_movements; track m.id) {
+              <li>
+                <div class="feed-main">
+                  <a [routerLink]="['/products', m.product.id]"
+                    ><strong>{{ m.product.name }}</strong></a
+                  >
+                  <small [title]="m.created_at | date: 'medium'">
+                    {{ m.reference ?? m.note ?? m.product.sku }} · {{ m.created_at | timeAgo }}
+                  </small>
+                </div>
+                <div class="feed-side">
+                  <app-movement-type [type]="m.type" />
+                  <strong
+                    class="num"
+                    [class.text-success]="m.quantity > 0"
+                    [class.text-danger]="m.quantity < 0"
+                    >{{ m.quantity | change }}</strong
+                  >
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="empty-state">No movements yet.</div>
+        }
+      }
+    </div>
+  </div>
+</section>

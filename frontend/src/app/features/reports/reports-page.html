@@ -1,0 +1,201 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Reports</h1>
+      <p class="subtitle">Where your money sits, what moves and how fast.</p>
+    </div>
+    <div class="page-actions">
+      <div class="segmented period" role="group" aria-label="Report period">
+        @for (d of periods; track d) {
+          <button
+            type="button"
+            [class.active]="days() === d"
+            [attr.aria-pressed]="days() === d"
+            (click)="setDays(d)"
+          >
+            {{ d }} days
+          </button>
+        }
+      </div>
+      <button type="button" class="btn" [disabled]="exporting()" (click)="exportStock()">
+        <app-icon name="download" [size]="16" />
+        {{ exporting() ? 'Exporting…' : 'Stock valuation CSV' }}
+      </button>
+    </div>
+  </header>
+
+  <div class="report-grid">
+    <div class="card card-flush">
+      <div class="card-header">
+        <div>
+          <h2>Stock value by category</h2>
+          <p class="card-subtitle">At cost price · total {{ totalValue() | money }}</p>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [disabled]="!categories.value()?.length"
+          (click)="exportCategories()"
+        >
+          <app-icon name="download" [size]="14" />
+          CSV
+        </button>
+      </div>
+      @if (categoryChart(); as config) {
+        <div class="chart-box">
+          <canvas [appChart]="config" aria-label="Stock value by category" role="img"></canvas>
+        </div>
+        <div class="table-wrap">
+          <table class="table compact">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th class="num">Products</th>
+                <th class="num">Units</th>
+                <th class="num">Value</th>
+                <th class="num">Share</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of categories.value(); track row.category) {
+                <tr>
+                  <td>
+                    <a routerLink="/products" [queryParams]="{ category: row.category }">{{
+                      row.category
+                    }}</a>
+                  </td>
+                  <td class="num">{{ row.product_count }}</td>
+                  <td class="num">{{ formatNumber(row.units) }}</td>
+                  <td class="num">{{ row.stock_value | money }}</td>
+                  <td class="num">{{ share(row.stock_value) }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else if (categories.isLoading()) {
+        <div class="loading-bar"></div>
+      } @else {
+        <div class="empty-state">No stock to value yet.</div>
+      }
+    </div>
+
+    <div class="card card-flush">
+      <div class="card-header">
+        <div>
+          <h2>Movements over time</h2>
+          <p class="card-subtitle">
+            Per {{ days() > 31 ? 'week' : 'day' }}, last {{ days() }} days
+          </p>
+        </div>
+        <div class="segmented measure" role="group" aria-label="Chart measure">
+          <button
+            type="button"
+            [class.active]="measure() === 'units'"
+            [attr.aria-pressed]="measure() === 'units'"
+            (click)="setMeasure('units')"
+          >
+            Units
+          </button>
+          <button
+            type="button"
+            [class.active]="measure() === 'value'"
+            [attr.aria-pressed]="measure() === 'value'"
+            (click)="setMeasure('value')"
+          >
+            Value
+          </button>
+        </div>
+      </div>
+      <div class="period-totals">
+        <div>
+          <small>Units in</small>
+          <strong class="text-success">+{{ formatNumber(periodTotals().in) }}</strong>
+          <small>{{ periodTotals().valueIn | money }} at cost</small>
+        </div>
+        <div>
+          <small>Units out</small>
+          <strong class="out">{{ formatNumber(periodTotals().out) }}</strong>
+          <small>{{ periodTotals().valueOut | money }} at cost</small>
+        </div>
+        <div>
+          <small>Adjustments (net)</small>
+          <strong>{{ formatChange(periodTotals().adjustments) }}</strong>
+        </div>
+      </div>
+      @if (timelineChart(); as config) {
+        <div class="chart-box tall">
+          <canvas [appChart]="config" aria-label="Stock in and out per day" role="img"></canvas>
+        </div>
+      } @else if (timeline.isLoading()) {
+        <div class="loading-bar"></div>
+      }
+    </div>
+
+    <div class="card card-flush wide">
+      <div class="card-header">
+        <div>
+          <h2>Top movers</h2>
+          <p class="card-subtitle">Most units out in the last {{ days() }} days</p>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm"
+          [disabled]="!movers.value()?.length"
+          (click)="exportMovers()"
+        >
+          <app-icon name="download" [size]="14" />
+          CSV
+        </button>
+      </div>
+      @if (movers.value()?.length) {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="rank">#</th>
+                <th>Product</th>
+                <th>Category</th>
+                <th class="bar-col">Units out</th>
+                <th class="num">Units in</th>
+                <th class="num">Movements</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of movers.value(); track m.product.id; let i = $index) {
+                <tr>
+                  <td class="rank">{{ i + 1 }}</td>
+                  <td>
+                    <div class="cell-main">
+                      <div>
+                        <a [routerLink]="['/products', m.product.id]"
+                          ><strong>{{ m.product.name }}</strong></a
+                        >
+                        <small>{{ m.product.sku }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{ m.category }}</td>
+                  <td class="bar-col">
+                    <div class="mover-bar">
+                      <span [style.width.%]="barWidth(m.units_out)"></span>
+                      <strong class="num"
+                        >{{ formatNumber(m.units_out) }} {{ m.product.unit }}</strong
+                      >
+                    </div>
+                  </td>
+                  <td class="num">{{ formatNumber(m.units_in) }}</td>
+                  <td class="num">{{ m.movement_count }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else if (movers.isLoading()) {
+        <div class="loading-bar"></div>
+      } @else {
+        <div class="empty-state">Nothing went out in this period.</div>
+      }
+    </div>
+  </div>
+</section>

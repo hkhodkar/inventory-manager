@@ -1,0 +1,127 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Low stock</h1>
+      <p class="subtitle">Products at or below their reorder level, empty shelves first.</p>
+    </div>
+  </header>
+
+  <div class="stat-row">
+    <div class="card stat">
+      <div class="stat-label">Out of stock</div>
+      <div class="stat-value num text-danger">{{ outCount() }}</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-label">Running low</div>
+      <div class="stat-value num warning">{{ lowCount() }}</div>
+    </div>
+    <div class="card stat">
+      <div class="stat-label">Cost to restock (suggested)</div>
+      <div class="stat-value num">{{ reorderCost() | money }}</div>
+    </div>
+  </div>
+
+  <div class="card card-flush">
+    <div class="toolbar">
+      <div class="segmented view-tabs" role="tablist" aria-label="Filter alerts">
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="view() === 'all'"
+          [class.active]="view() === 'all'"
+          (click)="setView('all')"
+        >
+          All <span class="count">{{ items().length }}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="view() === 'out'"
+          [class.active]="view() === 'out'"
+          (click)="setView('out')"
+        >
+          Out of stock <span class="count">{{ outCount() }}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="view() === 'low'"
+          [class.active]="view() === 'low'"
+          (click)="setView('low')"
+        >
+          Low <span class="count">{{ lowCount() }}</span>
+        </button>
+      </div>
+    </div>
+
+    @if (alerts.alerts.isLoading()) {
+      <div class="loading-bar"></div>
+    }
+
+    @if (visible().length) {
+      <ul class="list-plain alert-list">
+        @for (item of visible(); track item.id) {
+          <li class="alert-item">
+            <div class="alert-main">
+              <a [routerLink]="['/products', item.id]"
+                ><strong>{{ item.name }}</strong></a
+              >
+              <small>{{ item.sku }} · {{ item.category }}</small>
+            </div>
+
+            <div class="alert-level">
+              <div class="level-text">
+                <span class="num"
+                  ><strong>{{ item.stock }}</strong> / {{ item.reorder_level }}
+                  {{ item.unit }}</span
+                >
+                <app-stock-badge [status]="item.stock_status" />
+              </div>
+              <div class="level-bar" [class]="item.stock_status">
+                <span [style.width.%]="fill(item)"></span>
+              </div>
+            </div>
+
+            <div class="alert-supplier">
+              @if (item.supplier; as supplier) {
+                <a [routerLink]="['/suppliers', supplier.id]">{{ supplier.name }}</a>
+              } @else {
+                <span class="text-muted">No supplier</span>
+              }
+              <small
+                >Suggested order: {{ item.suggested_order }} {{ item.unit }} ·
+                {{ item.suggested_order * item.cost_price | money }}</small
+              >
+            </div>
+
+            <button type="button" class="btn btn-sm btn-primary" (click)="restock(item)">
+              <app-icon name="arrow-down" [size]="14" />
+              Restock
+            </button>
+          </li>
+        }
+      </ul>
+    } @else if (alerts.alerts.hasValue()) {
+      <div class="empty-state">
+        <app-icon name="check" [size]="20" />
+        <p>
+          @if (view() === 'all') {
+            All products are above their reorder level. Nice.
+          } @else {
+            Nothing in this group right now.
+          }
+        </p>
+      </div>
+    }
+  </div>
+</section>
+
+@if (restocking(); as item) {
+  <app-movement-form
+    [product]="item"
+    initialType="in"
+    [suggestedQuantity]="item.suggested_order"
+    (saved)="onRestocked()"
+    (closed)="closeRestock()"
+  />
+}

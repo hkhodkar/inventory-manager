@@ -1,0 +1,136 @@
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+
+  .wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.card-subtitle {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.period,
+.measure {
+  flex-wrap: nowrap;
+
+  button {
+    min-height: 32px;
+    padding: 4px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+}
+
+.chart-box {
+  position: relative;
+  height: 260px;
+  padding: 16px 20px;
+
+  &.tall {
+    height: 320px;
+  }
+}
+
+.table.compact {
+  th,
+  td {
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+}
+
+.period-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px 20px 0;
+
+  small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  strong {
+    font-size: 20px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .out {
+    color: var(--primary);
+  }
+}
+
+.rank {
+  width: 1%;
+  color: var(--text-subtle);
+}
+
+.bar-col {
+  width: 35%;
+  min-width: 200px;
+}
+
+.mover-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  span {
+    display: block;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--primary);
+  }
+
+  strong {
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+}
+
+// the media queries come last so they win over the grid above
+@media (max-width: 1100px) {
+  .report-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .page-actions {
+    width: 100%;
+  }
+
+  .period {
+    flex: 1 1 100%;
+
+    button {
+      flex: 1;
+    }
+  }
+
+  .chart-box {
+    padding: 12px;
+  }
+
+  .period-totals strong {
+    font-size: 17px;
+  }
+}

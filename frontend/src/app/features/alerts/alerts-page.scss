@@ -1,0 +1,116 @@
+.warning {
+  color: var(--warning);
+}
+
+.view-tabs {
+  flex: 0 1 auto;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 4px 12px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    cursor: pointer;
+
+    &.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  .count {
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--border);
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
+.alert-item {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) minmax(180px, 1fr) minmax(200px, 1.2fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  small {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+}
+
+.alert-main {
+  min-width: 0;
+
+  a {
+    color: var(--text);
+  }
+}
+
+.level-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.level-bar {
+  height: 6px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--warning);
+  }
+
+  &.out span {
+    background: var(--danger);
+  }
+}
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+
+  .icon {
+    color: var(--success);
+  }
+}
+
+// the media queries come last so they win over the grid above
+@media (max-width: 1100px) {
+  .alert-item {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .alert-item {
+    grid-template-columns: minmax(0, 1fr);
+
+    .btn {
+      justify-self: start;
+    }
+  }
+}
