@@ -245,7 +245,9 @@ a.btn {
 
 // Tables
 
+// relative, so visually hidden header text stays inside the scroll area on phones
 .table-wrap {
+  position: relative;
   overflow-x: auto;
 }
 
