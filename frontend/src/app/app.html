@@ -1,0 +1,85 @@
+<div class="layout">
+  <aside class="sidebar" [class.open]="menuOpen()">
+    <div class="sidebar-inner">
+      <div class="sidebar-top">
+        <a class="brand" routerLink="/">
+          <span class="brand-logo"><app-icon name="package" [size]="18" /></span>
+          <span>Inventory</span>
+        </a>
+        @if (alerts.count(); as count) {
+          <a
+            class="mobile-alerts"
+            routerLink="/alerts"
+            [attr.aria-label]="count + ' low-stock alerts'"
+          >
+            <app-icon name="bell" />
+            <span class="nav-badge">{{ count }}</span>
+          </a>
+        }
+        <button
+          type="button"
+          class="menu-btn"
+          [attr.aria-expanded]="menuOpen()"
+          aria-label="Toggle navigation"
+          (click)="toggleMenu()"
+        >
+          <app-icon [name]="menuOpen() ? 'x' : 'menu'" />
+        </button>
+      </div>
+
+      <nav class="nav" aria-label="Main">
+        @for (item of navItems; track item.path) {
+          <a
+            class="nav-link"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: !!item.exact }"
+          >
+            <app-icon [name]="item.icon" />
+            <span>{{ item.label }}</span>
+            @if (item.alerts && alerts.count()) {
+              <span class="nav-badge" [attr.aria-label]="alerts.count() + ' alerts'">{{
+                alerts.count()
+              }}</span>
+            }
+          </a>
+        }
+      </nav>
+
+      <div class="sidebar-footer">
+        <button
+          type="button"
+          class="nav-link"
+          (click)="theme.toggle()"
+          [attr.aria-label]="theme.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+        >
+          <app-icon [name]="theme.isDark() ? 'sun' : 'moon'" />
+          <span>{{ theme.isDark() ? 'Light mode' : 'Dark mode' }}</span>
+        </button>
+        @if (demo.active()) {
+          <a
+            class="nav-link"
+            href="https://github.com/hkhodkar/inventory-manager"
+            target="_blank"
+            rel="noopener"
+          >
+            <app-icon name="external" />
+            <span>Source code</span>
+          </a>
+        } @else {
+          <a class="nav-link" href="/docs" target="_blank" rel="noopener">
+            <app-icon name="external" />
+            <span>API docs</span>
+          </a>
+        }
+      </div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <app-demo-banner />
+    <router-outlet />
+  </main>
+</div>
+
+<app-toast-container />
