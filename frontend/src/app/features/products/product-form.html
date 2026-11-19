@@ -1,0 +1,194 @@
+<app-modal
+  [title]="product() ? 'Edit product' : 'New product'"
+  [width]="640"
+  (closed)="closed.emit()"
+>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="modal-body">
+      @if (serverError(); as error) {
+        <p class="form-error" role="alert">{{ error }}</p>
+      }
+      <div class="form-grid">
+        <div class="field">
+          <label for="product-sku">SKU</label>
+          <input
+            id="product-sku"
+            class="input upper"
+            formControlName="sku"
+            placeholder="e.g. ELC-1011"
+            autocomplete="off"
+            maxlength="32"
+          />
+          @if (showError('sku')) {
+            <span class="field-error">
+              {{
+                form.controls.sku.hasError('required')
+                  ? 'SKU is required'
+                  : 'Use 2-32 letters, digits or dashes'
+              }}
+            </span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="product-category">Category</label>
+          <input
+            id="product-category"
+            class="input"
+            formControlName="category"
+            list="category-options"
+            placeholder="e.g. Electronics"
+            autocomplete="off"
+          />
+          <datalist id="category-options">
+            @for (category of categories.value() ?? []; track category) {
+              <option [value]="category"></option>
+            }
+          </datalist>
+          @if (showError('category')) {
+            <span class="field-error">Category is required</span>
+          }
+        </div>
+
+        <div class="field full">
+          <label for="product-name">Product name</label>
+          <input
+            id="product-name"
+            class="input"
+            formControlName="name"
+            placeholder="e.g. Wireless keyboard"
+            autocomplete="off"
+          />
+          @if (showError('name')) {
+            <span class="field-error">Product name is required</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="product-unit">Unit</label>
+          <select id="product-unit" class="select" formControlName="unit">
+            @for (unit of units; track unit.value) {
+              <option [value]="unit.value">{{ unit.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="product-supplier">Supplier <span class="optional">(optional)</span></label>
+          <select id="product-supplier" class="select" formControlName="supplier_id">
+            <option [ngValue]="null">No supplier</option>
+            @for (supplier of suppliers.value() ?? []; track supplier.id) {
+              <option [ngValue]="supplier.id">{{ supplier.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="product-cost">Cost price</label>
+          <div class="input-prefix">
+            <span>$</span>
+            <input
+              id="product-cost"
+              class="input"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              formControlName="cost_price"
+              placeholder="0.00"
+            />
+          </div>
+          @if (showError('cost_price')) {
+            <span class="field-error">{{ numberError('cost_price') }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="product-price">Sale price</label>
+          <div class="input-prefix">
+            <span>$</span>
+            <input
+              id="product-price"
+              class="input"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              formControlName="sale_price"
+              placeholder="0.00"
+            />
+          </div>
+          @if (showError('sale_price')) {
+            <span class="field-error">{{ numberError('sale_price') }}</span>
+          } @else if (margin() !== null) {
+            <span class="field-hint" [class.negative]="margin()! < 0">
+              Margin {{ margin() }}%
+            </span>
+          }
+        </div>
+
+        <div class="field" [class.full]="!!product()">
+          <label for="product-reorder">Reorder level</label>
+          <input
+            id="product-reorder"
+            class="input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            formControlName="reorder_level"
+            placeholder="e.g. 10"
+          />
+          @if (showError('reorder_level')) {
+            <span class="field-error">{{ numberError('reorder_level') }}</span>
+          } @else {
+            <span class="field-hint">You get an alert at or below this stock level</span>
+          }
+        </div>
+
+        @if (!product()) {
+          <div class="field">
+            <label for="product-stock"
+              >Opening stock <span class="optional">(optional)</span></label
+            >
+            <input
+              id="product-stock"
+              class="input"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              step="1"
+              formControlName="initial_stock"
+              placeholder="0"
+            />
+            @if (showError('initial_stock')) {
+              <span class="field-error">{{ numberError('initial_stock') }}</span>
+            } @else {
+              <span class="field-hint">Booked as a stock-in movement</span>
+            }
+          </div>
+        }
+
+        <div class="field full">
+          <label for="product-description">
+            Description <span class="optional">(optional)</span>
+          </label>
+          <textarea
+            id="product-description"
+            class="textarea"
+            formControlName="description"
+            rows="3"
+            placeholder="Size, model, anything that helps to pick the right item"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <footer class="modal-footer">
+      <button type="button" class="btn" (click)="closed.emit()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : product() ? 'Save changes' : 'Create product' }}
+      </button>
+    </footer>
+  </form>
+</app-modal>

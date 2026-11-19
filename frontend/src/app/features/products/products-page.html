@@ -1,0 +1,241 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Products</h1>
+      <p class="subtitle">Your catalogue with live stock levels from the movement ledger.</p>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn btn-primary" (click)="create()">
+        <app-icon name="plus" [size]="16" />
+        New product
+      </button>
+    </div>
+  </header>
+
+  <div class="card card-flush">
+    <div class="toolbar">
+      <label class="search input-icon">
+        <span class="visually-hidden">Search products</span>
+        <app-icon name="search" [size]="16" />
+        <input
+          class="input"
+          type="search"
+          placeholder="Search by SKU, name or category"
+          [formControl]="listQuery.search"
+        />
+      </label>
+      <label>
+        <span class="visually-hidden">Category</span>
+        <select
+          class="select"
+          [value]="category() ?? ''"
+          (change)="setFilter('category', $any($event.target).value)"
+        >
+          <option value="">All categories</option>
+          @for (c of categories.value() ?? []; track c) {
+            <option [value]="c" [selected]="c === category()">{{ c }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span class="visually-hidden">Supplier</span>
+        <select
+          class="select"
+          [value]="supplier() ?? ''"
+          (change)="setFilter('supplier', $any($event.target).value)"
+        >
+          <option value="">All suppliers</option>
+          @for (s of suppliers.value() ?? []; track s.id) {
+            <option [value]="s.id" [selected]="'' + s.id === supplier()">{{ s.name }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        <span class="visually-hidden">Stock status</span>
+        <select
+          class="select"
+          [value]="statusFilter()"
+          (change)="setFilter('status', $any($event.target).value)"
+        >
+          <option value="">Any stock level</option>
+          @for (s of statuses; track s.value) {
+            <option [value]="s.value" [selected]="s.value === statusFilter()">{{ s.label }}</option>
+          }
+        </select>
+      </label>
+      @if (hasFilters()) {
+        <button type="button" class="btn btn-ghost btn-sm" (click)="clearFilters()">
+          Clear filters
+        </button>
+      }
+    </div>
+
+    @if (products.isLoading()) {
+      <div class="loading-bar"></div>
+    }
+
+    @if (products.error() && !result()) {
+      <div class="empty-state">Could not load products. Please try again.</div>
+    } @else if (result(); as page) {
+      @if (page.items.length) {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>
+                  <app-sort-header key="name" [sort]="sortKey()" (sortChange)="setSort($event)">
+                    Product
+                  </app-sort-header>
+                </th>
+                <th>
+                  <app-sort-header key="supplier" [sort]="sortKey()" (sortChange)="setSort($event)">
+                    Supplier
+                  </app-sort-header>
+                </th>
+                <th class="num">
+                  <app-sort-header
+                    key="stock"
+                    [sort]="sortKey()"
+                    [descFirst]="true"
+                    (sortChange)="setSort($event)"
+                  >
+                    On hand
+                  </app-sort-header>
+                </th>
+                <th>Status</th>
+                <th class="num">
+                  <app-sort-header
+                    key="sale_price"
+                    [sort]="sortKey()"
+                    [descFirst]="true"
+                    (sortChange)="setSort($event)"
+                  >
+                    Price
+                  </app-sort-header>
+                </th>
+                <th class="num">
+                  <app-sort-header
+                    key="stock_value"
+                    [sort]="sortKey()"
+                    [descFirst]="true"
+                    (sortChange)="setSort($event)"
+                  >
+                    Stock value
+                  </app-sort-header>
+                </th>
+                <th class="actions"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of page.items; track product.id) {
+                <tr class="clickable" (click)="open(product)">
+                  <td>
+                    <div class="cell-main">
+                      <div>
+                        <a
+                          [routerLink]="['/products', product.id]"
+                          (click)="$event.stopPropagation()"
+                        >
+                          <strong>{{ product.name }}</strong>
+                        </a>
+                        <small>{{ product.sku }} · {{ product.category }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    @if (product.supplier; as supplier) {
+                      <a
+                        [routerLink]="['/suppliers', supplier.id]"
+                        (click)="$event.stopPropagation()"
+                        >{{ supplier.name }}</a
+                      >
+                    } @else {
+                      <span class="text-muted">-</span>
+                    }
+                  </td>
+                  <td class="num">
+                    <strong>{{ product.stock }}</strong>
+                    <span class="text-muted"> {{ product.unit }}</span>
+                    <small class="reorder">reorder at {{ product.reorder_level }}</small>
+                  </td>
+                  <td><app-stock-badge [status]="product.stock_status" /></td>
+                  <td class="num">{{ product.sale_price | money: 'cents' }}</td>
+                  <td class="num">{{ product.stock_value | money }}</td>
+                  <td class="actions">
+                    <div class="row-actions">
+                      <button
+                        type="button"
+                        class="icon-btn"
+                        title="Record stock movement"
+                        [attr.aria-label]="'Record stock movement for ' + product.name"
+                        (click)="$event.stopPropagation(); recordMovement(product)"
+                      >
+                        <app-icon name="movements" [size]="16" />
+                      </button>
+                      <button
+                        type="button"
+                        class="icon-btn"
+                        title="Edit"
+                        [attr.aria-label]="'Edit ' + product.name"
+                        (click)="$event.stopPropagation(); edit(product)"
+                      >
+                        <app-icon name="pencil" [size]="16" />
+                      </button>
+                      <button
+                        type="button"
+                        class="icon-btn danger"
+                        title="Delete"
+                        [attr.aria-label]="'Delete ' + product.name"
+                        (click)="$event.stopPropagation(); askDelete(product)"
+                      >
+                        <app-icon name="trash" [size]="16" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination
+          [page]="page.page"
+          [pageSize]="page.page_size"
+          [total]="page.total"
+          (pageChange)="setPage($event)"
+        />
+      } @else {
+        <div class="empty-state">
+          @if (hasFilters()) {
+            No products match these filters.
+            <button type="button" class="btn btn-sm" (click)="clearFilters()">Clear filters</button>
+          } @else {
+            No products yet. Add your first one to start tracking stock.
+          }
+        </div>
+      }
+    }
+  </div>
+</section>
+
+@if (formOpen()) {
+  <app-product-form [product]="editing()" (saved)="onSaved($event)" (closed)="closeForm()" />
+}
+
+@if (moving(); as product) {
+  <app-movement-form [product]="product" (saved)="onMoved()" (closed)="closeMovement()" />
+}
+
+@if (deleting(); as product) {
+  <app-confirm-dialog
+    title="Delete product?"
+    [message]="
+      product.name +
+      ' (' +
+      product.sku +
+      ') and its full movement history will be removed. This cannot be undone.'
+    "
+    [busy]="busy()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  />
+}

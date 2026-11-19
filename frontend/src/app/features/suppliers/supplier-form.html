@@ -1,0 +1,139 @@
+<app-modal
+  [title]="supplier() ? 'Edit supplier' : 'New supplier'"
+  [width]="600"
+  (closed)="closed.emit()"
+>
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="modal-body">
+      @if (serverError(); as error) {
+        <p class="form-error" role="alert">{{ error }}</p>
+      }
+      <div class="form-grid">
+        <div class="field full">
+          <label for="supplier-name">Company name</label>
+          <input
+            id="supplier-name"
+            class="input"
+            formControlName="name"
+            placeholder="e.g. Boxwell Packaging"
+            autocomplete="organization"
+          />
+          @if (showError('name')) {
+            <span class="field-error">Company name is required</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="supplier-contact"
+            >Contact person <span class="optional">(optional)</span></label
+          >
+          <input
+            id="supplier-contact"
+            class="input"
+            formControlName="contact_name"
+            placeholder="e.g. Jana Krüger"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field">
+          <label for="supplier-email">Email <span class="optional">(optional)</span></label>
+          <input
+            id="supplier-email"
+            class="input"
+            type="email"
+            formControlName="email"
+            placeholder="orders@example.com"
+            autocomplete="off"
+          />
+          @if (showError('email')) {
+            <span class="field-error">Enter a valid email address</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="supplier-phone">Phone <span class="optional">(optional)</span></label>
+          <input
+            id="supplier-phone"
+            class="input"
+            type="tel"
+            formControlName="phone"
+            placeholder="+44 20 7946 0000"
+            autocomplete="off"
+          />
+          @if (showError('phone')) {
+            <span class="field-error">Use digits, spaces and + ( ) - only</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="supplier-website">Website <span class="optional">(optional)</span></label>
+          <input
+            id="supplier-website"
+            class="input"
+            formControlName="website"
+            placeholder="example.com"
+            inputmode="url"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field">
+          <label for="supplier-city">City <span class="optional">(optional)</span></label>
+          <input id="supplier-city" class="input" formControlName="city" placeholder="Hamburg" />
+        </div>
+
+        <div class="field">
+          <label for="supplier-country">Country <span class="optional">(optional)</span></label>
+          <input
+            id="supplier-country"
+            class="input"
+            formControlName="country"
+            placeholder="Germany"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field full">
+          <label for="supplier-lead"
+            >Lead time in days <span class="optional">(optional)</span></label
+          >
+          <input
+            id="supplier-lead"
+            class="input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="365"
+            step="1"
+            formControlName="lead_time_days"
+            placeholder="e.g. 7"
+          />
+          @if (showError('lead_time_days')) {
+            <span class="field-error">Use a whole number from 0 to 365</span>
+          } @else {
+            <span class="field-hint">Usual time from order to delivery</span>
+          }
+        </div>
+
+        <div class="field full">
+          <label for="supplier-notes">Notes <span class="optional">(optional)</span></label>
+          <textarea
+            id="supplier-notes"
+            class="textarea"
+            formControlName="notes"
+            rows="3"
+            placeholder="Minimum order, delivery days, payment terms"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <footer class="modal-footer">
+      <button type="button" class="btn" (click)="closed.emit()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : supplier() ? 'Save changes' : 'Create supplier' }}
+      </button>
+    </footer>
+  </form>
+</app-modal>

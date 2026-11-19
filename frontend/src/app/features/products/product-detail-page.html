@@ -1,0 +1,214 @@
+@if (product.value(); as p) {
+  <section class="page">
+    <div>
+      <a class="breadcrumb" routerLink="/products">
+        <app-icon name="arrow-left" [size]="14" />
+        Products
+      </a>
+      <header class="detail-header">
+        <div class="identity">
+          <span class="product-icon"><app-icon name="package" [size]="22" /></span>
+          <div>
+            <h1>{{ p.name }}</h1>
+            <p class="subtitle">
+              <span class="sku">{{ p.sku }}</span>
+              <span>·</span>
+              <span>{{ p.category }}</span>
+              <app-stock-badge [status]="p.stock_status" />
+            </p>
+          </div>
+        </div>
+        <div class="page-actions">
+          <button type="button" class="btn" (click)="edit()">
+            <app-icon name="pencil" [size]="16" />
+            Edit
+          </button>
+          <button type="button" class="btn" (click)="askDelete()">
+            <app-icon name="trash" [size]="16" />
+            Delete
+          </button>
+          <button type="button" class="btn btn-primary" (click)="openMovement('in')">
+            <app-icon name="movements" [size]="16" />
+            Record movement
+          </button>
+        </div>
+      </header>
+    </div>
+
+    <div class="stat-row">
+      <div class="card stat">
+        <div class="stat-label">On hand</div>
+        <div class="stat-value num" [class.text-danger]="p.stock_status === 'out'">
+          {{ p.stock }} <small>{{ p.unit }}</small>
+        </div>
+        <div class="level-bar" [class]="p.stock_status">
+          <span [style.width.%]="levelPercent()"></span>
+          <i title="Reorder level"></i>
+        </div>
+        <div class="stat-hint">Reorder at {{ p.reorder_level }} {{ p.unit }}</div>
+      </div>
+      <div class="card stat">
+        <div class="stat-label">Stock value at cost</div>
+        <div class="stat-value num">{{ p.stock_value | money: 'cents' }}</div>
+        <div class="stat-hint">Retail {{ p.stock * p.sale_price | money: 'cents' }}</div>
+      </div>
+      <div class="card stat">
+        <div class="stat-label">Sale price</div>
+        <div class="stat-value num">{{ p.sale_price | money: 'cents' }}</div>
+        <div class="stat-hint">
+          Cost {{ p.cost_price | money: 'cents' }}
+          @if (margin() !== null) {
+            · margin {{ margin() }}%
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="column">
+        <div class="card">
+          <div class="card-header"><h2>Details</h2></div>
+          <dl class="meta-list">
+            <div>
+              <dt>SKU</dt>
+              <dd class="sku">{{ p.sku }}</dd>
+            </div>
+            <div>
+              <dt>Category</dt>
+              <dd>{{ p.category }}</dd>
+            </div>
+            <div>
+              <dt>Unit</dt>
+              <dd>{{ p.unit }}</dd>
+            </div>
+            <div>
+              <dt>Supplier</dt>
+              <dd>
+                @if (p.supplier; as supplier) {
+                  <a [routerLink]="['/suppliers', supplier.id]">{{ supplier.name }}</a>
+                } @else {
+                  <span class="text-muted">No supplier</span>
+                }
+              </dd>
+            </div>
+            @if (p.description) {
+              <div>
+                <dt>Description</dt>
+                <dd class="notes">{{ p.description }}</dd>
+              </div>
+            }
+            <div>
+              <dt>Added</dt>
+              <dd>{{ p.created_at | date: 'mediumDate' }}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="card quick-actions">
+          <div class="card-header"><h2>Quick actions</h2></div>
+          <button type="button" class="btn" (click)="openMovement('in')">
+            <app-icon name="arrow-down" [size]="16" />
+            Receive stock
+          </button>
+          <button type="button" class="btn" [disabled]="p.stock <= 0" (click)="openMovement('out')">
+            <app-icon name="arrow-up" [size]="16" />
+            Ship or use stock
+          </button>
+          <button type="button" class="btn" (click)="openMovement('adjustment')">
+            <app-icon name="sliders" [size]="16" />
+            Adjust after a count
+          </button>
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="card card-flush">
+          <div class="card-header">
+            <h2>Movement history</h2>
+            <a class="btn btn-sm" routerLink="/movements" [queryParams]="{ search: p.sku }">
+              Open in log
+            </a>
+          </div>
+          @if (history.isLoading()) {
+            <div class="loading-bar"></div>
+          }
+          @if (historyResult(); as page) {
+            @if (page.items.length) {
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th class="num">Change</th>
+                      <th class="num">Balance</th>
+                      <th>Reference</th>
+                      <th>Note</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (m of page.items; track m.id) {
+                      <tr>
+                        <td>{{ m.created_at | date: 'MMM d, y, HH:mm' }}</td>
+                        <td><app-movement-type [type]="m.type" /></td>
+                        <td
+                          class="num change"
+                          [class.text-success]="m.quantity > 0"
+                          [class.text-danger]="m.quantity < 0"
+                        >
+                          {{ m.quantity | change }}
+                        </td>
+                        <td class="num">{{ m.balance_after }}</td>
+                        <td>{{ m.reference ?? '-' }}</td>
+                        <td class="note-cell" [title]="m.note ?? ''">{{ m.note ?? '-' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <app-pagination
+                [page]="page.page"
+                [pageSize]="page.page_size"
+                [total]="page.total"
+                (pageChange)="setHistoryPage($event)"
+              />
+            } @else {
+              <div class="empty-state">No stock movements yet.</div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (editing()) {
+    <app-product-form [product]="p" (saved)="onSaved($event)" (closed)="closeEdit()" />
+  }
+
+  @if (moveType(); as type) {
+    <app-movement-form
+      [product]="p"
+      [initialType]="type"
+      (saved)="onMoved()"
+      (closed)="closeMovement()"
+    />
+  }
+
+  @if (deleting()) {
+    <app-confirm-dialog
+      title="Delete product?"
+      [message]="p.name + ' and its full movement history will be removed. This cannot be undone.'"
+      [busy]="busy()"
+      (confirmed)="confirmDelete(p)"
+      (cancelled)="cancelDelete()"
+    />
+  }
+} @else if (product.error()) {
+  <div class="not-found">
+    <h2>{{ notFound() ? 'Product not found' : 'Could not load the product' }}</h2>
+    <p>{{ notFound() ? 'It may have been deleted.' : 'Please try again in a moment.' }}</p>
+    <a class="btn" routerLink="/products">Back to products</a>
+  </div>
+} @else {
+  <div class="loading-bar"></div>
+}

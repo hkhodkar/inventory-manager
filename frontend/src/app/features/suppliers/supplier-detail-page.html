@@ -1,0 +1,187 @@
+@if (supplier.value(); as s) {
+  <section class="page">
+    <div>
+      <a class="breadcrumb" routerLink="/suppliers">
+        <app-icon name="arrow-left" [size]="14" />
+        Suppliers
+      </a>
+      <header class="detail-header">
+        <div class="identity">
+          <span class="supplier-logo big"><app-icon name="truck" [size]="22" /></span>
+          <div>
+            <h1>{{ s.name }}</h1>
+            <p class="subtitle">
+              @if (location(s); as place) {
+                <app-icon name="map-pin" [size]="14" />
+                <span>{{ place }}</span>
+              } @else {
+                <span>Supplier</span>
+              }
+            </p>
+          </div>
+        </div>
+        <div class="page-actions">
+          <button type="button" class="btn" (click)="edit()">
+            <app-icon name="pencil" [size]="16" />
+            Edit
+          </button>
+          <button type="button" class="btn" (click)="askDelete()">
+            <app-icon name="trash" [size]="16" />
+            Delete
+          </button>
+        </div>
+      </header>
+    </div>
+
+    <div class="stat-row">
+      <div class="card stat">
+        <div class="stat-label">Products supplied</div>
+        <div class="stat-value num">{{ s.product_count }}</div>
+      </div>
+      <div class="card stat">
+        <div class="stat-label">Stock value at cost</div>
+        <div class="stat-value num">{{ s.stock_value | money }}</div>
+      </div>
+      <div class="card stat">
+        <div class="stat-label">Lead time</div>
+        <div class="stat-value num">
+          {{ s.lead_time_days === null ? '-' : s.lead_time_days + ' days' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="column">
+        <div class="card">
+          <div class="card-header"><h2>Contact</h2></div>
+          <ul class="list-plain contact-list">
+            <li>
+              <app-icon name="user" [size]="16" />
+              <span>{{ s.contact_name ?? 'No contact person' }}</span>
+            </li>
+            @if (s.email) {
+              <li>
+                <app-icon name="mail" [size]="16" />
+                <a [href]="'mailto:' + s.email">{{ s.email }}</a>
+              </li>
+            }
+            @if (s.phone) {
+              <li>
+                <app-icon name="phone" [size]="16" />
+                <a [href]="'tel:' + s.phone.replaceAll(' ', '')">{{ s.phone }}</a>
+              </li>
+            }
+            @if (s.website) {
+              <li>
+                <app-icon name="globe" [size]="16" />
+                <a [href]="s.website" target="_blank" rel="noopener">{{
+                  websiteLabel(s.website)
+                }}</a>
+              </li>
+            }
+          </ul>
+          @if (s.notes) {
+            <dl class="meta-list notes-block">
+              <div>
+                <dt>Notes</dt>
+                <dd class="notes">{{ s.notes }}</dd>
+              </div>
+            </dl>
+          }
+        </div>
+      </div>
+
+      <div class="column">
+        <div class="card card-flush">
+          <div class="card-header">
+            <h2>Products</h2>
+            <button type="button" class="btn btn-sm" (click)="addProduct()">
+              <app-icon name="plus" [size]="14" />
+              Add product
+            </button>
+          </div>
+          @if (products.isLoading()) {
+            <div class="loading-bar"></div>
+          }
+          @if (productsResult(); as page) {
+            @if (page.items.length) {
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th class="num">On hand</th>
+                      <th>Status</th>
+                      <th class="num">Cost</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of page.items; track p.id) {
+                      <tr>
+                        <td>
+                          <div class="cell-main">
+                            <div>
+                              <a [routerLink]="['/products', p.id]"
+                                ><strong>{{ p.name }}</strong></a
+                              >
+                              <small>{{ p.sku }}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td class="num">
+                          {{ p.stock }} <span class="text-muted">{{ p.unit }}</span>
+                        </td>
+                        <td><app-stock-badge [status]="p.stock_status" /></td>
+                        <td class="num">{{ p.cost_price | money: 'cents' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              @if (page.total > page.page_size) {
+                <app-pagination
+                  [page]="page.page"
+                  [pageSize]="page.page_size"
+                  [total]="page.total"
+                  (pageChange)="setProductsPage($event)"
+                />
+              }
+            } @else {
+              <div class="empty-state">No products from this supplier yet.</div>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (editing()) {
+    <app-supplier-form [supplier]="s" (saved)="onSaved($event)" (closed)="closeEdit()" />
+  }
+
+  @if (addingProduct()) {
+    <app-product-form
+      [supplierId]="s.id"
+      (saved)="onProductAdded($event)"
+      (closed)="closeAddProduct()"
+    />
+  }
+
+  @if (deleting()) {
+    <app-confirm-dialog
+      title="Delete supplier?"
+      [message]="deleteMessage(s)"
+      [busy]="busy()"
+      (confirmed)="confirmDelete(s)"
+      (cancelled)="cancelDelete()"
+    />
+  }
+} @else if (supplier.error()) {
+  <div class="not-found">
+    <h2>{{ notFound() ? 'Supplier not found' : 'Could not load the supplier' }}</h2>
+    <p>{{ notFound() ? 'It may have been deleted.' : 'Please try again in a moment.' }}</p>
+    <a class="btn" routerLink="/suppliers">Back to suppliers</a>
+  </div>
+} @else {
+  <div class="loading-bar"></div>
+}

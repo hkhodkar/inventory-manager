@@ -1,0 +1,176 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Suppliers</h1>
+      <p class="subtitle">Who you buy from, how to reach them and what they supply.</p>
+    </div>
+    <div class="page-actions">
+      <button type="button" class="btn btn-primary" (click)="create()">
+        <app-icon name="plus" [size]="16" />
+        New supplier
+      </button>
+    </div>
+  </header>
+
+  <div class="card card-flush">
+    <div class="toolbar">
+      <label class="search input-icon">
+        <span class="visually-hidden">Search suppliers</span>
+        <app-icon name="search" [size]="16" />
+        <input
+          class="input"
+          type="search"
+          placeholder="Search name, contact, email or city"
+          [formControl]="listQuery.search"
+        />
+      </label>
+    </div>
+
+    @if (suppliers.isLoading()) {
+      <div class="loading-bar"></div>
+    }
+
+    @if (suppliers.error() && !result()) {
+      <div class="empty-state">Could not load suppliers. Please try again.</div>
+    } @else if (result(); as page) {
+      @if (page.items.length) {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>
+                  <app-sort-header key="name" [sort]="sortKey()" (sortChange)="setSort($event)">
+                    Supplier
+                  </app-sort-header>
+                </th>
+                <th>Contact</th>
+                <th>
+                  <app-sort-header key="country" [sort]="sortKey()" (sortChange)="setSort($event)">
+                    Location
+                  </app-sort-header>
+                </th>
+                <th class="num">
+                  <app-sort-header
+                    key="lead_time_days"
+                    [sort]="sortKey()"
+                    (sortChange)="setSort($event)"
+                  >
+                    Lead time
+                  </app-sort-header>
+                </th>
+                <th class="num">
+                  <app-sort-header
+                    key="products"
+                    [sort]="sortKey()"
+                    [descFirst]="true"
+                    (sortChange)="setSort($event)"
+                  >
+                    Products
+                  </app-sort-header>
+                </th>
+                <th class="num">
+                  <app-sort-header
+                    key="stock_value"
+                    [sort]="sortKey()"
+                    [descFirst]="true"
+                    (sortChange)="setSort($event)"
+                  >
+                    Stock value
+                  </app-sort-header>
+                </th>
+                <th class="actions"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (supplier of page.items; track supplier.id) {
+                <tr class="clickable" (click)="open(supplier)">
+                  <td>
+                    <div class="cell-main">
+                      <span class="supplier-logo"><app-icon name="truck" [size]="16" /></span>
+                      <div>
+                        <a
+                          [routerLink]="['/suppliers', supplier.id]"
+                          (click)="$event.stopPropagation()"
+                        >
+                          <strong>{{ supplier.name }}</strong>
+                        </a>
+                        <small>{{ supplier.contact_name ?? 'No contact person' }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="contact-cell">
+                      @if (supplier.email) {
+                        <a [href]="'mailto:' + supplier.email" (click)="$event.stopPropagation()">{{
+                          supplier.email
+                        }}</a>
+                      }
+                      @if (supplier.phone) {
+                        <small>{{ supplier.phone }}</small>
+                      }
+                      @if (!supplier.email && !supplier.phone) {
+                        <span class="text-muted">-</span>
+                      }
+                    </div>
+                  </td>
+                  <td>{{ location(supplier) }}</td>
+                  <td class="num">
+                    {{ supplier.lead_time_days === null ? '-' : supplier.lead_time_days + ' days' }}
+                  </td>
+                  <td class="num">{{ supplier.product_count }}</td>
+                  <td class="num">{{ supplier.stock_value | money }}</td>
+                  <td class="actions">
+                    <div class="row-actions">
+                      <button
+                        type="button"
+                        class="icon-btn"
+                        title="Edit"
+                        [attr.aria-label]="'Edit ' + supplier.name"
+                        (click)="$event.stopPropagation(); edit(supplier)"
+                      >
+                        <app-icon name="pencil" [size]="16" />
+                      </button>
+                      <button
+                        type="button"
+                        class="icon-btn danger"
+                        title="Delete"
+                        [attr.aria-label]="'Delete ' + supplier.name"
+                        (click)="$event.stopPropagation(); askDelete(supplier)"
+                      >
+                        <app-icon name="trash" [size]="16" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination
+          [page]="page.page"
+          [pageSize]="page.page_size"
+          [total]="page.total"
+          (pageChange)="setPage($event)"
+        />
+      } @else {
+        <div class="empty-state">
+          {{ search() ? 'No suppliers match your search.' : 'No suppliers yet.' }}
+        </div>
+      }
+    }
+  </div>
+</section>
+
+@if (formOpen()) {
+  <app-supplier-form [supplier]="editing()" (saved)="onSaved($event)" (closed)="closeForm()" />
+}
+
+@if (deleting(); as supplier) {
+  <app-confirm-dialog
+    title="Delete supplier?"
+    [message]="deleteMessage(supplier)"
+    [busy]="busy()"
+    (confirmed)="confirmDelete()"
+    (cancelled)="cancelDelete()"
+  />
+}

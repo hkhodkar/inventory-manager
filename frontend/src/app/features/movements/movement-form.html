@@ -1,0 +1,98 @@
+<app-modal title="Record stock movement" (closed)="closed.emit()">
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="modal-body">
+      <div class="product-summary">
+        <div>
+          <strong>{{ product().name }}</strong>
+          <small>{{ product().sku }}</small>
+        </div>
+        <div class="on-hand">
+          <small>On hand</small>
+          <strong class="num">{{ formatNumber(product().stock) }} {{ product().unit }}</strong>
+        </div>
+      </div>
+
+      @if (serverError(); as error) {
+        <p class="form-error" role="alert">{{ error }}</p>
+      }
+
+      <div class="form-grid">
+        <fieldset class="field full">
+          <legend>Movement type</legend>
+          <div class="segmented type-picker">
+            @for (t of types; track t.value) {
+              <label>
+                <input type="radio" formControlName="type" [value]="t.value" />
+                <span class="type-label">{{ t.label }}</span>
+                <small>{{ t.hint }}</small>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="movement-quantity">
+            {{ isAdjustment() ? 'Counted stock' : 'Quantity' }}
+            <span class="optional">({{ product().unit }})</span>
+          </label>
+          <input
+            id="movement-quantity"
+            class="input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            formControlName="quantity"
+            [class.is-invalid]="showQuantityError()"
+            [placeholder]="isAdjustment() ? 'e.g. ' + product().stock : 'e.g. 10'"
+          />
+          @if (showQuantityError()) {
+            <span class="field-error" role="alert">{{ quantityError() }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="movement-reference">Reference <span class="optional">(optional)</span></label>
+          <input
+            id="movement-reference"
+            class="input"
+            formControlName="reference"
+            maxlength="60"
+            [placeholder]="referenceHint()"
+          />
+        </div>
+
+        <div class="field full">
+          <label for="movement-note">Note <span class="optional">(optional)</span></label>
+          <textarea
+            id="movement-note"
+            class="textarea"
+            formControlName="note"
+            rows="2"
+            maxlength="300"
+            placeholder="e.g. Damaged in transit, supplier notified"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="preview" [class.problem]="!!quantityProblem() || (balanceAfter() ?? 0) < 0">
+        <app-icon name="package" [size]="16" />
+        @if (balanceAfter() !== null) {
+          <span>
+            Stock after this movement:
+            <strong class="num">{{ formatNumber(balanceAfter()) }} {{ product().unit }}</strong>
+          </span>
+        } @else {
+          <span>Enter a quantity to see the new stock level</span>
+        }
+      </div>
+    </div>
+
+    <footer class="modal-footer">
+      <button type="button" class="btn" (click)="closed.emit()">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Save movement' }}
+      </button>
+    </footer>
+  </form>
+</app-modal>

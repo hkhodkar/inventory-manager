@@ -1,0 +1,83 @@
+.product-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.sku {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+.stat-value small {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.stat-hint {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.level-bar {
+  position: relative;
+  height: 6px;
+  margin-top: 10px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--success);
+  }
+
+  i {
+    position: absolute;
+    top: -3px;
+    left: 33.33%;
+    width: 2px;
+    height: 12px;
+    background: var(--text-subtle);
+  }
+
+  &.low span {
+    background: var(--warning);
+  }
+
+  &.out span {
+    background: var(--danger);
+  }
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .card-header {
+    margin-bottom: 8px;
+  }
+
+  .btn {
+    justify-content: flex-start;
+  }
+}
+
+.change {
+  font-weight: 600;
+}
+
+.note-cell {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
